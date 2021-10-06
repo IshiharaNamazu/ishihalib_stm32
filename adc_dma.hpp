@@ -3,6 +3,8 @@
 
 #include "main.h"
 #include "stdio.h"
+#ifdef HAL_ADC_MODULE_ENABLED
+namespace ishihalib {
 
 class ADC_DMA {
 	ADC_HandleTypeDef* handle;
@@ -26,3 +28,6 @@ class ADC_DMA {
 		return ret;
 	}
 };
+
+}  // namespace ishihalib
+#endif

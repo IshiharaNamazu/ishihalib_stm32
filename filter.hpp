@@ -2,7 +2,7 @@
 
 #include <algorithm>
 #include <vector>
-
+namespace ishihalib {
 class LowPassFilter {
 	float K;
 	float prev;
@@ -59,3 +59,4 @@ class MedianFilter {
 		return sorted_data[(n_sample + 1) / 2];						  //median
 	}
 };
+}  // namespace ishihalib
