@@ -13,19 +13,24 @@ class ADC_DMA {
 	const int NumOfChannel;
 
   public:
-	ADC_DMA(ADC_HandleTypeDef* _handle, const int _NumOfChannel) : handle(_handle), NumOfChannel(_NumOfChannel) {
+	ADC_DMA(ADC_HandleTypeDef* _handle, const int _NumOfChannel, bool chalibration = true) : handle(_handle), NumOfChannel(_NumOfChannel) {
 		buf.resize(NumOfChannel);
-		if (HAL_ADCEx_Calibration_Start(handle, ADC_SINGLE_ENDED) != HAL_OK) Error_Handler();
+		if (chalibration)
+			if (HAL_ADCEx_Calibration_Start(handle, ADC_SINGLE_ENDED) != HAL_OK) Error_Handler();
 		HAL_ADC_Start_DMA(handle, (uint32_t*)&buf[0], 1);
 	}
 
-	uint16_t read(int ch) {
+	uint16_t read(int ch, bool continuous = true) {
 		//if (ch < 0 || ch >= NumOfChannel) return 4097;
 		//printf("%d\n", buf[ch]);
 		uint16_t ret = buf[ch];
-		HAL_ADC_Start_DMA(handle, (uint32_t*)&buf[0], 1);
+		if (continuous) HAL_ADC_Start_DMA(handle, (uint32_t*)&buf[0], 1);
 
 		return ret;
+	}
+
+	void startDMA() {
+		HAL_ADC_Start_DMA(handle, (uint32_t*)&buf[0], 1);
 	}
 };
 
