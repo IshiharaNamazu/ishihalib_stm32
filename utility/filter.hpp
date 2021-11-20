@@ -37,9 +37,11 @@ class AverageFilter {
 			cnt %= n_sample;
 
 			return (sum / n_sample);
-		} else {  //平均
-			cnt++;
-			sum += new_data;
+		} else {							//平均
+			if (cnt < __INT32_MAX__ - 1) {	//オーバーフローさせない
+				cnt++;
+				sum += new_data;
+			}
 			return sum / cnt;
 		}
 	}
