@@ -17,24 +17,39 @@ class LowPassFilter {
 };
 
 class AverageFilter {
-	int n_sample;
+	const int n_sample;
 	std::vector<float> data;
-	float sum = 0;
-	int cnt = 0;
+	double sum;
+	int cnt;
 
   public:
-	AverageFilter(int num_of_sampling) : n_sample(num_of_sampling), data(num_of_sampling, 0.0) {
+	AverageFilter(const int num_of_sampling = -1) : n_sample(num_of_sampling), data(0, 0), sum(0), cnt(0) {	 //平均値フィルタ n<=0でデータ数無限
+		if (n_sample > 0) data.resize(n_sample, 0);
 	}
 
-	float calc(float new_data) {  //O(1)
-		sum -= data[cnt];
-		sum += new_data;
+	double calc(double new_data) {
+		if (n_sample > 0) {	 //移動平均 O(1)
+			sum -= data[cnt];
+			sum += new_data;
 
-		data[cnt] = new_data;
-		cnt++;
-		cnt %= n_sample;
+			data[cnt] = new_data;
+			cnt++;
+			cnt %= n_sample;
 
-		return (sum / n_sample);
+			return (sum / n_sample);
+		} else {  //平均
+			cnt++;
+			sum += new_data;
+			return sum / cnt;
+		}
+	}
+
+	void reset() {
+		sum = 0;
+		cnt = 0;
+		if (n_sample > 0) {
+			data.resize(n_sample, 0);
+		}
 	}
 };
 
