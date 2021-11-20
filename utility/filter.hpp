@@ -18,7 +18,7 @@ class LowPassFilter {
 
 class AverageFilter {
 	const int n_sample;
-	std::vector<float> data;
+	std::vector<double> data;
 	double sum;
 	int cnt;
 
@@ -37,8 +37,8 @@ class AverageFilter {
 			cnt %= n_sample;
 
 			return (sum / n_sample);
-		} else {							//平均
-			if (cnt < __INT32_MAX__ - 1) {	//オーバーフローさせない
+		} else {						//平均
+			if (cnt < __INT32_MAX__) {	//オーバーフローさせない
 				cnt++;
 				sum += new_data;
 			}
