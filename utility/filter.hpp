@@ -46,6 +46,16 @@ class AverageFilter {
 		}
 	}
 
+	double get(){
+		if (n_sample > 0) {
+			return sum/n_sample;
+		}
+		else{
+			if(cnt==0)return 0;
+			else sum/cnt;
+		}
+	}
+
 	void reset() {
 		sum = 0;
 		cnt = 0;
