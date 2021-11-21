@@ -52,7 +52,7 @@ class AverageFilter {
 		}
 		else{
 			if(cnt==0)return 0;
-			else sum/cnt;
+			else return (sum/cnt);
 		}
 	}
 
