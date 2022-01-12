@@ -36,6 +36,26 @@ class DigitalOut {
 		toggle();
 		return *this;
 	}
+
+	operator int() {
+		return read();
+	}
+};
+
+class DigitalIn {
+	GPIO_TypeDef* port_;
+	uint16_t pin_;
+
+  public:
+	DigitalIn(GPIO_TypeDef* port, uint16_t pin) : port_(port), pin_(pin) {}
+
+	GPIO_PinState read() {
+		return HAL_GPIO_ReadPin(port_, pin_);
+	}
+
+	operator int() {
+		return read();
+	}
 };
 
 }  // namespace ishihalib
