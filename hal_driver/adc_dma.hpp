@@ -15,8 +15,8 @@ class ADC_DMA {
   public:
 	ADC_DMA(ADC_HandleTypeDef* _handle, const int _NumOfChannel, bool chalibration = true) : handle(_handle), NumOfChannel(_NumOfChannel) {
 		buf.resize(NumOfChannel);
-		if (chalibration)
-			if (HAL_ADCEx_Calibration_Start(handle, ADC_SINGLE_ENDED) != HAL_OK) Error_Handler();
+		// if (chalibration)
+		// 	if (HAL_ADCEx_Calibration_Start(handle, ADC_SINGLE_ENDED) != HAL_OK) Error_Handler();
 		HAL_ADC_Start_DMA(handle, (uint32_t*)&buf[0], 1);
 	}
 

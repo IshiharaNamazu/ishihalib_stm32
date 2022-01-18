@@ -11,19 +11,19 @@ class DigitalOut {
   public:
 	DigitalOut(GPIO_TypeDef* port, uint16_t pin) : port_(port), pin_(pin) {}
 
-	void write(GPIO_PinState state) {
-		HAL_GPIO_WritePin(port_, pin_, state);
+	void write(int state) {
+		HAL_GPIO_WritePin(port_, pin_, static_cast<GPIO_PinState>(state));
 	}
 
-	GPIO_PinState read() {
-		return HAL_GPIO_ReadPin(port_, pin_);
+	int read() {
+		return static_cast<int>(HAL_GPIO_ReadPin(port_, pin_));
 	}
 
 	void toggle() {
 		HAL_GPIO_TogglePin(port_, pin_);
 	}
 
-	DigitalOut& operator=(GPIO_PinState state) {
+	DigitalOut& operator=(int state) {
 		write(state);
 		return *this;
 	}
@@ -49,8 +49,8 @@ class DigitalIn {
   public:
 	DigitalIn(GPIO_TypeDef* port, uint16_t pin) : port_(port), pin_(pin) {}
 
-	GPIO_PinState read() {
-		return HAL_GPIO_ReadPin(port_, pin_);
+	int read() {
+		return static_cast<int>(HAL_GPIO_ReadPin(port_, pin_));
 	}
 
 	operator int() {

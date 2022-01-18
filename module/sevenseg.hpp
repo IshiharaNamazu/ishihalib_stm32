@@ -3,7 +3,7 @@
 #include <array>
 #include <cstdint>
 
-#include "digitalIO.hpp"
+#include "../hal_driver/digitalIO.hpp"
 #include "main.h"
 namespace ishihalib {
 
@@ -17,10 +17,10 @@ class SevenSegmentLED {
 														  0b01001111,  //3
 														  0b01100110,  //4
 														  0b01101101,  //5
-														  0b01111100,  //6
+														  0b01111101,  //6
 														  0b00000111,  //7
 														  0b01111111,  //8
-														  0b01100111,  //9
+														  0b01101111,  //9
 														  0b01000000   //-
 													  } {}
 	void write_raw(uint8_t data) {
@@ -32,7 +32,7 @@ class SevenSegmentLED {
 		if (num > 9 || num < 0)
 			write_raw(number_images[10]);
 		else
-			write_raw(number_images(num))
+			write_raw(number_images[num]);
 	}
 
 	SevenSegmentLED& operator=(int num) {
