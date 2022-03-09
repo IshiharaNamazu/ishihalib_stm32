@@ -9,7 +9,7 @@ namespace ishihalib {
 class ADC_DMA {
 	ADC_HandleTypeDef* handle;
 	std::vector<uint16_t> buf;
-	//uint16_t buf[16] = {};
+	// uint16_t buf[16] = {};
 	const int NumOfChannel;
 
   public:
@@ -17,14 +17,14 @@ class ADC_DMA {
 		buf.resize(NumOfChannel);
 		// if (chalibration)
 		// 	if (HAL_ADCEx_Calibration_Start(handle, ADC_SINGLE_ENDED) != HAL_OK) Error_Handler();
-		HAL_ADC_Start_DMA(handle, (uint32_t*)&buf[0], 1);
+		HAL_ADC_Start_DMA(handle, (uint32_t*)&buf[0], _NumOfChannel);
 	}
 
 	uint16_t read(int ch, bool continuous = true) {
-		//if (ch < 0 || ch >= NumOfChannel) return 4097;
-		//printf("%d\n", buf[ch]);
+		// if (ch < 0 || ch >= NumOfChannel) return 4097;
+		// printf("%d\n", buf[ch]);
 		uint16_t ret = buf[ch];
-		if (continuous) HAL_ADC_Start_DMA(handle, (uint32_t*)&buf[0], 1);
+		// if (continuous) HAL_ADC_Start_DMA(handle, (uint32_t*)&buf[0], 1);
 
 		return ret;
 	}
