@@ -11,7 +11,7 @@
 #include "main.h"
 #ifdef HAL_GPIO_MODULE_ENABLED
 
-namespace ishihalib {
+namespace ishihalib::stm32 {
 
 class DigitalOut {
   GPIO_TypeDef *port_;
@@ -27,9 +27,7 @@ public:
   void write(bool state) { write(static_cast<GPIO_PinState>(state)); }
   operator bool() { return pre_state_; }
 
-  void toggle(){
-	  write(pre_state_==false);
-  }
+  void toggle() { write(pre_state_ == false); }
 
   DigitalOut &operator=(GPIO_PinState state) {
     write(state);
@@ -41,7 +39,7 @@ public:
   }
 };
 
-} // namespace ishihalib
+} // namespace ishihalib::stm32
 
 #endif
 #endif /* INC_ISHIHALIB_STM32_HAL_DRIVER_DIGITALIO_HPP_ */

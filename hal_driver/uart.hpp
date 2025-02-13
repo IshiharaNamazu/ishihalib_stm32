@@ -12,7 +12,7 @@
 
 #include <string>
 
-namespace ishihalib {
+namespace ishihalib::stm32 {
 
 class Uart {
   UART_HandleTypeDef *handle_;
@@ -26,7 +26,7 @@ public:
   }
 };
 
-} // namespace ishihalib
+} // namespace ishihalib::stm32
 
 #endif /* INC_ISHIHALIB_STM32_HAL_DRIVER_UART_HPP_ */
 

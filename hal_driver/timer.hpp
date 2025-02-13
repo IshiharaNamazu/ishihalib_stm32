@@ -17,7 +17,7 @@
  * 現状初期化処理
  * 1カウント1us，Timerが1ms周期で割り込まれるように設定
  * */
-namespace ishihalib {
+namespace ishihalib::stm32 {
 
 class Timer {
 public:
@@ -81,7 +81,7 @@ public:
   }
 };
 
-} // namespace ishihalib
+} // namespace ishihalib::stm32
 
 #endif /* INC_ISHIHALIB_STM32_HAL_DRIVER_TIMER_HPP_ */
 #endif
