@@ -27,6 +27,10 @@ public:
   void write(bool state) { write(static_cast<GPIO_PinState>(state)); }
   operator bool() { return pre_state_; }
 
+  void toggle(){
+	  write(pre_state_==false);
+  }
+
   DigitalOut &operator=(GPIO_PinState state) {
     write(state);
     return *this;
