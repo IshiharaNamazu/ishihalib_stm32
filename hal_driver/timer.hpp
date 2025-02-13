@@ -19,6 +19,8 @@
  * */
 namespace ishihalib::stm32 {
 
+inline std::map<TIM_HandleTypeDef *, std::function<void(void)>> timer_handle_its_; // HALから呼ばれるhandle毎の割り込み
+
 class Timer {
 public:
   struct cb_item_t {
@@ -50,7 +52,6 @@ private:
   }
 
   // friend void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *);
-  inline static std::map<TIM_HandleTypeDef *, std::function<void(void)>> handle_its_; // handle毎の割り込み
 
 public:
   Timer(TIM_HandleTypeDef *handle, int count_per_sec = 1e6, int it_per_count = 1000)
@@ -59,7 +60,7 @@ public:
     HAL_TIM_Base_Start_IT(handle_);
 
     // HALから自身のcallback()が呼び出されるように
-    handle_its_.insert(std::make_pair(handle_, [this] { it_callback(); }));
+    timer_handle_its_.insert(std::make_pair(handle_, [this] { it_callback(); }));
   }
   uint32_t get_counter(void) { return __HAL_TIM_GET_COUNTER(handle_); }
   double get_time() { return ((double)n_of_it_ * it_per_count_ + get_counter()) / count_per_sec_; }
@@ -71,13 +72,6 @@ public:
     if (division <= 0)
       division = 1;
     callback_fns_.insert({priority, {func, division, 0}});
-  }
-
-  static void hal_it_callback(TIM_HandleTypeDef *htim) {
-    // HALの割り込みで呼ばれる関数
-    if (handle_its_.find(htim) != handle_its_.end()) {
-      handle_its_.at(htim)();
-    }
   }
 };
 
