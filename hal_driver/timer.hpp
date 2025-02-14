@@ -28,7 +28,7 @@ public:
 
 private:
   TIM_HandleTypeDef *handle_;
-  unsigned long long input_clock_;
+  unsigned long long input_clock_freq_;
   uint32_t prescaler_; // 1カウントが何分の1秒か
   uint32_t period_;    // 何カウントで割り込みが入るか
 
@@ -65,22 +65,22 @@ private:
   // friend void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *);
 
 public:
-  Timer(TIM_HandleTypeDef *handle, unsigned long long input_clock = 0) : handle_(handle), n_of_it_(0) {
+  Timer(TIM_HandleTypeDef *handle, unsigned long long input_clock_freq = 0) : handle_(handle), n_of_it_(0) {
     prescaler_ = handle->Init.Prescaler;
     period_ = handle->Init.Period;
-    input_clock_ = (input_clock == 0) ? (0.5 + ((prescaler_ + 1LL) * 1e6))
-                                      : input_clock; // 指定されなければ1us周期でカウントするという仮定
+    input_clock_freq_ = (input_clock_freq == 0) ? (0.5 + ((prescaler_ + 1LL) * 1e6))
+                                                : input_clock_freq; // 指定されなければ1us周期でカウントするという仮定
     // 割り込み開始
     HAL_TIM_Base_Start_IT(handle_);
     // HALから自身のcallback()が呼び出されるように
     timer_handle_its_.insert(std::make_pair(handle_, [this] { it_callback(); }));
   }
-  Timer(TIM_HandleTypeDef *handle, unsigned long long input_clock, uint32_t prescaler, uint32_t period)
+  Timer(TIM_HandleTypeDef *handle, unsigned long long input_clock_freq, uint32_t prescaler, uint32_t period)
       : handle_(handle), n_of_it_(0) {
     prescaler_ = handle->Init.Prescaler;
     period_ = handle->Init.Period;
-    input_clock_ = (input_clock == 0) ? (0.5 + ((prescaler_ + 1LL) * 1e6))
-                                      : input_clock; // 指定されなければ1us周期でカウントするという仮定
+    input_clock_freq_ = (input_clock_freq == 0) ? (0.5 + ((prescaler_ + 1LL) * 1e6))
+                                                : input_clock_freq; // 指定されなければ1us周期でカウントするという仮定
     // 割り込み開始
     HAL_TIM_Base_Start_IT(handle_);
     // HALから自身のcallback()が呼び出されるように
@@ -111,8 +111,26 @@ public:
     }
   }
 
+  void pwm_start(uint32_t ch) { HAL_TIM_PWM_Start(handle_, ch); }
+  void pwm_write(float value, uint32_t ch) {
+    if (value < 0)
+      value = 0;
+    if (value > 1)
+      value = 1;
+    uint32_t pulse = (uint32_t)(value * period_ + 0.5);
+    __HAL_TIM_SET_COMPARE(handle_, ch, pulse);
+  }
+
+  void pwm_period(float sec, uint32_t ch) {
+    double pulse = sec * input_clock_freq_ / ((prescaler_ + 1ULL));
+    if (pulse > period_)
+      pulse = period_;
+    if (pulse < 0)
+      pulse = 0;
+    __HAL_TIM_SET_COMPARE(handle_, ch, static_cast<uint32_t>(pulse + 0.5));
+  }
   uint32_t get_counter(void) { return __HAL_TIM_GET_COUNTER(handle_); }
-  double get_time() { return (((double)n_of_it_ * (period_ + 1.) + get_counter()) * (prescaler_ + 1.)) / input_clock_; }
+  double get_time() { return (((double)n_of_it_ * (period_ + 1.) + get_counter()) * (prescaler_ + 1.)) / input_clock_freq_; }
 
   void attach(std::function<void(void)> func, size_t division = 1, uint8_t priority = 100) {
     // 割り込みdivision回に一回attachで登録した関数が呼ばれる
