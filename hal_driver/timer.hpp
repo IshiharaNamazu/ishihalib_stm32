@@ -14,10 +14,6 @@
 #include <functional>
 #include <map>
 
-/*
- * 現状初期化処理
- * 1カウント1us，Timerが1ms周期で割り込まれるように設定
- * */
 namespace ishihalib::stm32 {
 
 inline std::map<TIM_HandleTypeDef *, std::function<void(void)>> timer_handle_its_; // HALから呼ばれるhandle毎の割り込み
@@ -94,8 +90,6 @@ public:
 
   uint32_t get_counter(void) { return __HAL_TIM_GET_COUNTER(handle_); }
   double get_time() { return (((double)n_of_it_ * (period_ + 1.) + get_counter()) * (prescaler_ + 1.)) / input_clock_; }
-
-  double get_param() { return input_clock_; }
 
   void attach(std::function<void(void)> func, size_t division = 1, uint8_t priority = 100) {
     // 割り込みdivision回に一回attachで登録した関数が呼ばれる
