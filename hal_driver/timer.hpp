@@ -13,6 +13,7 @@
 
 #include <functional>
 #include <map>
+
 /*
  * 現状初期化処理
  * 1カウント1us，Timerが1ms周期で割り込まれるように設定
@@ -31,10 +32,10 @@ public:
 
 private:
   TIM_HandleTypeDef *handle_;
-  int ms_ = 0;
-  int count_per_sec_;              // 1カウントが何分の1秒か
-  int it_per_count_;               // 何カウントで割り込みが入るか
-  unsigned long long n_of_it_ = 0; // 今まで割り込みが入った回数
+  unsigned long long input_clock_;
+  int prescaler_;              // 1カウントが何分の1秒か
+  int period_;                 // 何カウントで割り込みが入るか
+  unsigned long long n_of_it_; // 今まで割り込みが入った回数
 
   std::multimap<uint8_t, cb_item_t> callback_fns_;
 
@@ -54,16 +55,47 @@ private:
   // friend void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *);
 
 public:
-  Timer(TIM_HandleTypeDef *handle, int count_per_sec = 1e6, int it_per_count = 1000)
-      : handle_(handle), count_per_sec_(1e6), it_per_count_(1000) {
+  Timer(TIM_HandleTypeDef *handle, unsigned long long input_clock = 0) : handle_(handle), n_of_it_(0) {
+    prescaler_ = handle->Init.Prescaler;
+    period_ = handle->Init.Period;
+
+    input_clock_ = (input_clock == 0) ? (0.5 + ((prescaler_ + 1LL) * 1e6))
+                                      : input_clock; // 指定されなければ1us周期でカウントするという仮定
+
     // 割り込み開始
     HAL_TIM_Base_Start_IT(handle_);
 
     // HALから自身のcallback()が呼び出されるように
     timer_handle_its_.insert(std::make_pair(handle_, [this] { it_callback(); }));
   }
+
+  void set_clock_configration(int new_prescaler, int new_period) {
+    // Auto Reload PreloadをEnableにすることを推奨
+
+    // 時間の整合性(未検証)
+    n_of_it_ =
+        ((n_of_it_ + 1ULL) * (period_ + 1ULL) * (prescaler_ + 1ULL)) / ((new_prescaler + 1ULL) * (new_period + 1ULL));
+
+    prescaler_ = new_prescaler;
+    period_ = new_period;
+
+    handle_->Init.Prescaler = new_prescaler;
+    handle_->Init.Period = new_period;
+
+    if (handle_->Init.AutoReloadPreload == TIM_AUTORELOAD_PRELOAD_ENABLE) {
+      handle_->Instance->PSC = new_prescaler;
+      handle_->Instance->ARR = new_period;
+    } else {
+      __HAL_TIM_DISABLE(handle_); // タイマー停止
+      HAL_TIM_Base_Init(handle_);
+      __HAL_TIM_ENABLE(handle_); // 再開
+    }
+  }
+
   uint32_t get_counter(void) { return __HAL_TIM_GET_COUNTER(handle_); }
-  double get_time() { return ((double)n_of_it_ * it_per_count_ + get_counter()) / count_per_sec_; }
+  double get_time() { return (((double)n_of_it_ * (period_ + 1.) + get_counter()) * (prescaler_ + 1.)) / input_clock_; }
+
+  double get_param() { return input_clock_; }
 
   void attach(std::function<void(void)> func, size_t division = 1, uint8_t priority = 100) {
     // 割り込みdivision回に一回attachで登録した関数が呼ばれる
