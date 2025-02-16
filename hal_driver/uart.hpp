@@ -17,16 +17,34 @@ namespace ishihalib::stm32 {
 class Uart {
   UART_HandleTypeDef *handle_;
   std::string send_str_; // 送信用の一時的なバッファ
+  std::string send_buffer_;
   size_t r_dma_buffer_size_ = 0;
   uint8_t *r_dma_buffer_ptr_ = 0;
   size_t r_dma_read_index_ = 0;
+  bool use_dma_transmit_with_buf_ = false;
 
 public:
   Uart(UART_HandleTypeDef *handle) : handle_(handle) {}
 
-  void write(std::string str, int timeout_ms = 100) {
-    send_str_ = str;
-    HAL_UART_Transmit(handle_, (uint8_t *)send_str_.c_str(), send_str_.length(), timeout_ms);
+  void use_dma_transmit_with_buffer(bool use_dma = true) {
+    // dma送信と通常の送信を混ぜると問題を起こす可能性がある
+    // 割り込みを有効にしないと送信完了しないから気を付けよう!
+    use_dma_transmit_with_buf_ = use_dma;
+  }
+  void write(std::string str, bool skip_send = false, int timeout_ms = 100) {
+    if (use_dma_transmit_with_buf_) {
+      send_buffer_ += str;
+
+      auto test = handle_->gState;
+      if ((!skip_send) && (handle_->gState == HAL_UART_STATE_READY)) {
+        send_str_ = send_buffer_;
+        send_buffer_ = "";
+        HAL_UART_Transmit_DMA(handle_, (uint8_t *)send_str_.c_str(), send_str_.length());
+      }
+    } else {
+      send_str_ = str;
+      HAL_UART_Transmit(handle_, (uint8_t *)send_str_.c_str(), send_str_.length(), timeout_ms);
+    }
   }
 
   void start_receive_dma(size_t buffer_size, uint8_t *buffer_ptr = NULL) {
