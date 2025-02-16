@@ -11,9 +11,13 @@
 #include "main.h"
 #ifdef HAL_TIM_MODULE_ENABLED
 
+#include <array>
 #include <functional>
 #include <map>
 
+#ifndef MAX_WAIT_ID
+#define MAX_WAIT_ID (16 - 1)
+#endif
 namespace ishihalib::stm32 {
 
 inline std::map<TIM_HandleTypeDef *, std::function<void(void)>> timer_handle_its_; // HALから呼ばれるhandle毎の割り込み
@@ -41,6 +45,8 @@ private:
 
   std::multimap<uint8_t, cb_item_t> callback_fns_;
 
+  std::array<float, MAX_WAIT_ID + 1> pretime_;
+
   void it_callback() {
     n_of_it_++;
 
@@ -65,7 +71,8 @@ private:
   // friend void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *);
 
 public:
-  Timer(TIM_HandleTypeDef *handle, unsigned long long input_clock_freq = 0) : handle_(handle), n_of_it_(0) {
+  Timer(TIM_HandleTypeDef *handle, unsigned long long input_clock_freq = 0)
+      : handle_(handle), n_of_it_(0), pretime_(std::array<float, MAX_WAIT_ID + 1>()) {
     prescaler_ = handle->Init.Prescaler;
     period_ = handle->Init.Period;
     input_clock_freq_ = (input_clock_freq == 0) ? (0.5 + ((prescaler_ + 1LL) * 1e6))
@@ -76,7 +83,7 @@ public:
     timer_handle_its_.insert(std::make_pair(handle_, [this] { it_callback(); }));
   }
   Timer(TIM_HandleTypeDef *handle, unsigned long long input_clock_freq, uint32_t prescaler, uint32_t period)
-      : handle_(handle), n_of_it_(0) {
+      : handle_(handle), n_of_it_(0), pretime_(std::array<float, MAX_WAIT_ID + 1>()) {
     prescaler_ = handle->Init.Prescaler;
     period_ = handle->Init.Period;
     input_clock_freq_ = (input_clock_freq == 0) ? (0.5 + ((prescaler_ + 1LL) * 1e6))
@@ -141,6 +148,36 @@ public:
     if (division <= 0)
       division = 1;
     callback_fns_.insert({priority, {func, division, 0}});
+  }
+  bool wait(float interval, uint8_t wait_id) {
+    if ((0 > wait_id) || (wait_id > MAX_WAIT_ID))
+      return false;
+
+    if (pretime_.at(wait_id) == 0U) {
+      pretime_.at(wait_id) = get_time();
+      return false;
+    } else {
+      if (pretime_.at(wait_id) + interval <= get_time()) {
+        pretime_.at(wait_id) = 0.0;
+        return true;
+      }
+    }
+    return false;
+  }
+  bool await(float interval, uint8_t wait_id) {
+    if ((0 > wait_id) || (wait_id > MAX_WAIT_ID))
+      return false;
+
+    if (pretime_.at(wait_id) == 0.0) {
+      pretime_.at(wait_id) = get_time();
+      return false;
+    } else {
+      if (pretime_.at(wait_id) + interval <= get_time()) {
+        pretime_.at(wait_id) += interval;
+        return true;
+      }
+    }
+    return false;
   }
 };
 
