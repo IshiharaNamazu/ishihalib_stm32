@@ -26,6 +26,7 @@ public:
   }
   void write(bool state) { write(static_cast<GPIO_PinState>(state)); }
   operator bool() { return pre_state_; }
+  operator int() { return static_cast<int>(pre_state_); }
 
   void toggle() { write(pre_state_ == false); }
 
@@ -37,6 +38,19 @@ public:
     write(static_cast<GPIO_PinState>(state));
     return *this;
   }
+};
+
+class DigitalIn {
+  GPIO_TypeDef *port_;
+  uint16_t pin_;
+  GPIO_PinState pre_state_ = GPIO_PIN_RESET;
+
+public:
+  DigitalIn(GPIO_TypeDef *port, uint16_t pin) : port_(port), pin_(pin) {}
+
+  bool read() { return HAL_GPIO_ReadPin(port_, pin_); }
+  operator bool() { return read(); }
+  operator int() { return static_cast<int>(read()); }
 };
 
 } // namespace ishihalib::stm32
