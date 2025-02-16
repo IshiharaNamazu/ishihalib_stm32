@@ -130,7 +130,9 @@ public:
     __HAL_TIM_SET_COMPARE(handle_, ch, static_cast<uint32_t>(pulse + 0.5));
   }
   uint32_t get_counter(void) { return __HAL_TIM_GET_COUNTER(handle_); }
-  double get_time() { return (((double)n_of_it_ * (period_ + 1.) + get_counter()) * (prescaler_ + 1.)) / input_clock_freq_; }
+  double get_time() {
+    return (((double)n_of_it_ * (period_ + 1.) + get_counter()) * (prescaler_ + 1.)) / input_clock_freq_;
+  }
 
   void attach(std::function<void(void)> func, size_t division = 1, uint8_t priority = 100) {
     // 割り込みdivision回に一回attachで登録した関数が呼ばれる
